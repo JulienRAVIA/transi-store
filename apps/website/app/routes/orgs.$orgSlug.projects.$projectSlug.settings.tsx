@@ -33,6 +33,7 @@ import {
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { getInstance } from "~/middleware/i18next";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -62,6 +63,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
+
   const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
@@ -114,12 +117,16 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const tagName = formData.get("tag");
 
     if (!tagName || typeof tagName !== "string" || !tagName.trim()) {
-      return { error: "Le nom du tag est requis" };
+      return { error: i18next.t("settings.tags.errors.nameRequired") };
     }
 
     const existingTags = await getProjectTags(project.id);
     if (existingTags.some((t) => t.name === tagName.trim())) {
-      return { error: `Le tag "${tagName.trim()}" existe déjà` };
+      return {
+        error: i18next.t("settings.tags.errors.duplicate", {
+          tag: tagName.trim(),
+        }),
+      };
     }
 
     await addTagToProject(project.id, tagName.trim());
@@ -131,7 +138,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const tagName = formData.get("tag");
 
     if (!tagName || typeof tagName !== "string") {
-      return { error: "Le nom du tag est requis" };
+      return { error: i18next.t("settings.tags.errors.nameRequired") };
     }
 
     await removeTagFromProject(project.id, tagName);
@@ -139,7 +146,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
-  return { error: "Action invalide" };
+  return { error: i18next.t("settings.errors.invalidIntent") };
 }
 
 export default function ProjectSettings() {

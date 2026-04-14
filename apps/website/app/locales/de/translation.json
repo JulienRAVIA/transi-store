@@ -383,6 +383,8 @@
   "settings.title": "Einstellungen",
   "settings.tags.actionSuccess": "✓ Tag erfolgreich aktualisiert",
   "settings.tags.addTag": "Tag hinzufügen",
+  "settings.tags.errors.duplicate": "Tag \"{tag}\" existiert bereits",
+  "settings.tags.errors.nameRequired": "Tag-Name ist erforderlich",
   "settings.tags.noTags": "Keine Tags konfiguriert.",
   "settings.tags.placeholder": "frontend, mobile, backend...",
   "settings.tags.title": "Tags ({count})",

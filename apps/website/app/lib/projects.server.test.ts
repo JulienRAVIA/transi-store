@@ -5,7 +5,6 @@ import {
   cleanupDb,
   createOrganization,
   createProject,
-  createProjectTag,
   type TestDb,
 } from "../../tests/test-db";
 import {

@@ -354,6 +354,8 @@
   "settings.title": "Ajustes",
   "settings.tags.actionSuccess": "✓ Etiqueta actualizada con éxito",
   "settings.tags.addTag": "Añadir etiqueta",
+  "settings.tags.errors.duplicate": "La etiqueta \"{tag}\" ya existe",
+  "settings.tags.errors.nameRequired": "El nombre de la etiqueta es obligatorio",
   "settings.tags.noTags": "No hay etiquetas configuradas.",
   "settings.tags.placeholder": "frontend, mobile, backend...",
   "settings.tags.title": "Etiquetas ({count})",

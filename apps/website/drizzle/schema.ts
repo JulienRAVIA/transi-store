@@ -134,7 +134,7 @@ export const projects = pgTable(
   ],
 );
 
-// Tags de projets
+// Project tags
 export const projectTags = pgTable(
   "project_tags",
   {
