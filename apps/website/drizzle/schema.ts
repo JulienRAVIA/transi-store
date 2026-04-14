@@ -134,6 +134,23 @@ export const projects = pgTable(
   ],
 );
 
+// Tags de projets
+export const projectTags = pgTable(
+  "project_tags",
+  {
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("unique_project_tag").on(table.projectId, table.name),
+    index("idx_project_tags_name").on(table.name),
+  ],
+);
+
 // Langues disponibles par projet
 export const projectLanguages = pgTable(
   "project_languages",
@@ -287,6 +304,9 @@ export type NewApiKey = typeof apiKeys.$inferInsert;
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
+
+export type ProjectTag = typeof projectTags.$inferSelect;
+export type NewProjectTag = typeof projectTags.$inferInsert;
 
 export type ProjectLanguage = typeof projectLanguages.$inferSelect;
 export type NewProjectLanguage = typeof projectLanguages.$inferInsert;
