@@ -66,6 +66,7 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.users.id,
     }),
     languages: r.many.projectLanguages(),
+    tags: r.many.projectTags(),
     translationKeys: r.many.translationKeys(),
     branches: r.many.branches(),
   },
@@ -126,6 +127,14 @@ export const relations = defineRelations(schema, (r) => ({
     translationKey: r.one.translationKeys({
       from: r.branchKeyDeletions.translationKeyId,
       to: r.translationKeys.id,
+    }),
+  },
+
+  // Project Tags relations
+  projectTags: {
+    project: r.one.projects({
+      from: r.projectTags.projectId,
+      to: r.projects.id,
     }),
   },
 }));

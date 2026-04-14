@@ -185,3 +185,20 @@ export async function createTranslation(
     .returning();
   return translation;
 }
+
+export async function createProjectTag(
+  db: TestDb,
+  projectId: number,
+  name: string,
+  overrides: Partial<schema.NewProjectTag> = {},
+): Promise<schema.ProjectTag> {
+  const [tag] = await db
+    .insert(schema.projectTags)
+    .values({
+      projectId,
+      name,
+      ...overrides,
+    })
+    .returning();
+  return tag;
+}

@@ -10,6 +10,7 @@ import {
   Badge,
   Input,
   Field,
+  Wrap,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -26,9 +27,13 @@ import {
   getProjectLanguages,
   addLanguageToProject,
   removeLanguageFromProject,
+  addTagToProject,
+  removeTagFromProject,
+  getProjectTags,
 } from "~/lib/projects.server";
 import { useTranslation } from "react-i18next";
 import { createProjectNotFoundResponse } from "~/errors/response-errors/ProjectNotFoundResponse";
+import { getInstance } from "~/middleware/i18next";
 
 type ContextType = {
   organization: { id: string; slug: string; name: string };
@@ -39,6 +44,7 @@ type ContextType = {
     description: string | null;
   };
   languages: Array<{ id: string; locale: string; isDefault: boolean }>;
+  tags: Array<{ id: string; name: string }>;
 };
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -57,6 +63,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
+  const i18next = getInstance(context);
+
   const user = context.get(userContext);
   const organization = await requireOrganizationMembership(
     user,
@@ -105,11 +113,45 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return { success: true };
   }
 
-  return { error: "Action invalide" };
+  if (action === "add_tag") {
+    const tagName = formData.get("tag");
+
+    if (!tagName || typeof tagName !== "string" || !tagName.trim()) {
+      return { error: i18next.t("settings.tags.errors.nameRequired") };
+    }
+
+    const existingTags = await getProjectTags(project.id);
+    if (existingTags.some((t) => t.name === tagName.trim())) {
+      return {
+        error: i18next.t("settings.tags.errors.duplicate", {
+          tag: tagName.trim(),
+        }),
+      };
+    }
+
+    await addTagToProject(project.id, tagName.trim());
+
+    return { success: true };
+  }
+
+  if (action === "remove_tag") {
+    const tagName = formData.get("tag");
+
+    if (!tagName || typeof tagName !== "string") {
+      return { error: i18next.t("settings.tags.errors.nameRequired") };
+    }
+
+    await removeTagFromProject(project.id, tagName);
+
+    return { success: true };
+  }
+
+  return { error: i18next.t("settings.errors.invalidIntent") };
 }
 
 export default function ProjectSettings() {
-  const { organization, project, languages } = useOutletContext<ContextType>();
+  const { organization, project, languages, tags } =
+    useOutletContext<ContextType>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -149,10 +191,10 @@ export default function ProjectSettings() {
         </VStack>
       </Box>
 
-      {/* Langues */}
+      {/* Tags */}
       <Box>
         <Heading as="h2" size="lg" mb={4}>
-          {t("settings.languages", { count: languages.length })}
+          {t("settings.tags.title", { count: tags.length })}
         </Heading>
 
         {actionData?.error && (
@@ -169,9 +211,76 @@ export default function ProjectSettings() {
             borderRadius="md"
             mb={4}
           >
-            {t("settings.languageActionSuccess")}
+            {t("settings.tags.actionSuccess")}
           </Box>
         )}
+
+        {tags.length > 0 && (
+          <Wrap gap={2} mb={4}>
+            {tags.map((tag) => (
+              <Badge
+                key={tag.id}
+                colorPalette="brand"
+                variant="subtle"
+                size="lg"
+              >
+                <HStack gap={1}>
+                  <Text>{tag.name}</Text>
+                  <Form method="post" style={{ display: "inline" }}>
+                    <input type="hidden" name="_action" value="remove_tag" />
+                    <input type="hidden" name="tag" value={tag.name} />
+                    <Button
+                      type="submit"
+                      size="2xs"
+                      variant="ghost"
+                      colorPalette="red"
+                      disabled={isSubmitting}
+                      minW="auto"
+                      p={0}
+                    >
+                      <LuTrash2 />
+                    </Button>
+                  </Form>
+                </HStack>
+              </Badge>
+            ))}
+          </Wrap>
+        )}
+
+        {tags.length === 0 && (
+          <Box
+            p={6}
+            textAlign="center"
+            borderWidth={1}
+            borderRadius="lg"
+            mb={4}
+          >
+            <Text color="fg.muted">{t("settings.tags.noTags")}</Text>
+          </Box>
+        )}
+
+        <Form method="post">
+          <input type="hidden" name="_action" value="add_tag" />
+          <HStack>
+            <Field.Root flex={1}>
+              <Input
+                name="tag"
+                placeholder={t("settings.tags.placeholder")}
+                disabled={isSubmitting}
+              />
+            </Field.Root>
+            <Button type="submit" colorPalette="brand" loading={isSubmitting}>
+              <LuPlus /> {t("settings.tags.addTag")}
+            </Button>
+          </HStack>
+        </Form>
+      </Box>
+
+      {/* Langues */}
+      <Box>
+        <Heading as="h2" size="lg" mb={4}>
+          {t("settings.languages", { count: languages.length })}
+        </Heading>
 
         {languages.length === 0 ? (
           <Box
